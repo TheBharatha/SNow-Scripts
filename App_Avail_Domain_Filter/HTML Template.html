@@ -1,0 +1,69 @@
+<div class = "buttonGrid">
+  <div ng-repeat="allApp in c.data.appNamesValues.appsNvalues">
+    <button type= "button" name="domainButtons" ng-click="showAppStatus(allApp.appValue)">
+      {{allApp.appName}}
+    </button>
+  </div>
+</div>
+<div>&nbsp;</div>
+<div class="header">
+  <div class="panel panel-default">
+    <div class="panel-heading">&nbsp;</div>
+    <div class="panel-body">
+      <table id="cppAppStatus" class="table table-condensed table-striped">
+        <thead>
+          <th scope="col">
+            <h2 class="panel-title title">
+              ${Status History}
+            </h2>
+          </th>
+          <th scope="col" ng-repeat="date in ::data.dates" class="date-column">{{::date.month}} {{::date.day}}</th>
+          <th scope="col" class="date-column">${Now}</th>
+        </thead>
+        <tbody>
+          <tr ng-repeat-start="category in ::c.data.categories" aria-hidden="true">
+            <th scope="col" colspan="4" title="{{::category.label}}"><h3 class="title category" ng-bind-html="::category.label"></h3></th>
+          </tr>
+          <tr ng-repeat-end ng-repeat="service in ::category.services">
+            <td scope="row">
+              <a href="javascript:void(0)" data-service="{{service.sys_id}}" ng-click="c.detailsModal($event, service.sys_id, service.name)" ng-bind-html="::service.name" title="Click for more info"></a>
+            </td>
+            <td ng-repeat="n in [0,1,2,3,4,5,6] track by $index" class="outage-row">
+              <span
+                    class="fa" 
+                    href="javascript:void(0)" 
+                    data-outage="{{outage.sys_id}}" 
+                    ng-click="c.doClick($event, service.outages[6-$index].link)"
+                    ng-class="::service.outages[6-$index].icon" 
+                    sp-tooltip
+                    aria-label="{{::data.dates[$index].month + ' ' + data.dates[$index].day + ' - ' + service.outages[6-$index].msg}}"
+                    role="application" 
+                    tooltip-smart="true"
+                    tooltip-template="{{::service.outages[6-$index].msg + ' - ' + data.dates[$index].month + ' ' + data.dates[$index].day}}">
+              </span>
+            </td>
+            <td class="outage-row">
+              <span ng-if="service.curOutages[0] == 0" 
+                    class="label label-success" style="background:#558234">${Operational}
+              </span>
+              <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == 'Major Incident'"
+                    class="label label-danger" style="background:#ff0000">${Major Incident}
+              </span>
+              <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '1 - Critical'" 
+                    class="label label-warning" style="background:#cc3300">${P1 Incident}
+              </span>
+              <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '2 - High'"
+                    class="label label-primary" style="background:#ff6600">${P2 Incident}
+              </span>
+              <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '3 - Moderate'"
+                    class="labelP3" style="background:#f0eb4e">${P3 Incident}
+              </span>
+              <span ng-if="service.curOutages[0] > 1"
+                    class="label label-info">{{service.curOutages[1]}}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
