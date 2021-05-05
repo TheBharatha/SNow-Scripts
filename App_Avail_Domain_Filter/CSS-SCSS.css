@@ -1,3 +1,10 @@
+.showDomain{
+  background-color: #cfd2d1;
+  color: $gray-darker;
+  font-size: 2rem;
+  border-radius: 0.5em;
+  padding:5px 0px 5px 20px;
+}
 .buttonGrid{
   text-align:center;
   display:grid;
@@ -27,14 +34,37 @@ button:hover{
   margin: 0px;
 }
 
+thead{
+  background-color: #cfd2d1;
+}
+
 .category {
   padding-top:15px;
   color: blue;
 }
 
+.tb {
+  margin-top: -45px;
+  width: 100%;
+}
+
+.tb th {
+  padding-bottom: 4px;
+}
+
 /* Status Icons */
+
+.fa {
+  cursor: pointer;
+  font-size: 18px;
+}
+
 .fa-check-circle {
   color: $brand-success;
+}
+
+.fa-question-circle {
+  color: #000000;
 }
 
 .fa-plus-circle {
@@ -57,23 +87,9 @@ button:hover{
   color: orange;
 }
 
-.tb {
-  margin-top: -45px;
-  width: 100%;
-}
-
-.tb th {
-  padding-bottom: 4px;
-}
-
 .outage-row {
   text-align: center;
   padding: 5px;
-}
-
-.fa {
-  cursor: pointer;
-  font-size: 18px;
 }
 
 .date-column {
@@ -92,20 +108,31 @@ button:hover{
 }
 
 .banner-success {
-  background-color: #5cb85c;
+	background-color: #5cb85c;
 }
 
 .label {
   border-radius: 1em;
   font-weight: normal;
-  font-size: 90%;
+  font-size: 100%;
   display: block;
+  margin: 3px 0px 3px 0px;
 }
 
 .labelP3 {
   color: black;
   border-radius: 1em;
   font-weight: normal;
-  font-size: 90%;
+  font-size: 100%;
   display: block;
+  margin: 3px 0px 3px 0px;
+}
+
+.panel-body {
+	margin: 0px -20px 0px -20px;
+  text-align: center;
+}
+
+text{
+  color: #0066ff;
 }
