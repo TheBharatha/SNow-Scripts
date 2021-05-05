@@ -1,5 +1,6 @@
 (function() {
 
+	//Get Month and Date - Start
 	data.monthTranslations = {
 		'Jan': gs.getMessage("Jan"),
 		'Feb': gs.getMessage("Feb"),
@@ -21,15 +22,33 @@
 		d.subtract(1000 * 3600 * 24 * (j - 1));
 		data.dates.push(d.getDisplayValueInternal());
 	}
+	//Get Month and Date - End
 
-	//Domain filter buttons block start
-	data.appNamesValues = {"appsNvalues" : []};
-	data.queryModulate = "x_fru_foundation_application.u_cpp=yes^sys_class_name=cmdb_ci_service^u_imc_status=Active^x_fru_foundation_service_towerANYTHING";
-	data.categories = [];
+	//Default query for apps from all the domains
+	var queryModulate = 'x_fru_foundation_application.u_cpp=yes^sys_class_name=cmdb_ci_service^u_imc_status=Active^x_fru_foundation_service_towerANYTHING';
+	data.selectedDomain = 'All Domains';
 
+	//Manage the input received to change the query accordingly
+	if(input) {
+		if(input.domainValue == "ANYTHING"){
+			queryModulate = queryModulate;
+		} else {
+			queryModulate = 'x_fru_foundation_application.u_cpp=yes^sys_class_name=cmdb_ci_service^u_imc_status=Active^x_fru_foundation_service_tower='+input.domainValue;
+		}
+		data.selectedDomain = input.domainName;
+	}
+
+	//Object to store the Domain names and their value to support query
+	data.appNamesValues = {
+		"appsNvalues" : []
+	};
+
+	//Get the domains and its values
 	var allDomains = new GlideRecord("sys_choice");
 	allDomains.addEncodedQuery('name=cmdb_ci_service^element=x_fru_foundation_service_tower^language=en^inactive=false^labelNOT LIKEarchitecture^labelNOT LIKEpayments, deposits, trust^label!=business partner^label!=credit and lending^label!=Enterprise Data and Analytics^label!=Delivery Channels and Contact Management^label!=Corporate and Enterprise Risk^label!=Strategy, Contact Center Platform and CoE^label!=Core Payments Development and Delivery^label!=Deposits Platform and Processing^label!=Information Security and Technology Risk^label!=Electronic Payments and Strategy Development');
 	allDomains.query();
+
+	data.countType = {};
 	var av = {};
 	while(allDomains.next()) {
 		av.appName = allDomains.getValue('label');
@@ -37,9 +56,12 @@
 		data.appNamesValues.appsNvalues.push(av);
 		av = {};
 	}
+
 	av.appName = "All Domains";
 	av.appValue = "ANYTHING";
 	data.appNamesValues.appsNvalues.push(av);
+
+	//Sort the Domain names alphabetically
 	data.appNamesValues.appsNvalues.sort(function(a,b){
 		if(a.appName > b.appName) {
 			return 1;
@@ -48,43 +70,35 @@
 		}
 	});
 
-	if(input) {
-		if(input.domainValue == "ANYTHING"){
-			data.queryModulate = data.queryModulate;
-		} else {
-			data.queryModulate = "x_fru_foundation_application.u_cpp=yes^sys_class_name=cmdb_ci_service^u_imc_status=Active^x_fru_foundation_service_tower="+input.domainValue;
-		}
-	}
-
-	//Domain filter buttons ends
-	
+	//Based on the query get the application names of the chosen domain or all domain
 	var svs = new GlideRecord("cmdb_ci_service");
+	svs.addEncodedQuery(queryModulate);
+	svs.setLimit(options.number_of_services || 250);
+	svs.orderByDesc("category");
+	svs.orderBy("busines_criticality");
+	svs.orderBy("name");
+	svs.query();
 	var currentCategory = "-";
 	var catIndex = -1;
-	svs.addEncodedQuery(data.queryModulate);
-	svs.setLimit(options.number_of_services || 250);
-	svs.orderByDesc("category");
-	svs.orderBy("busines_criticality");
-	svs.orderBy("name");
-	svs.query();
-	svs.addEncodedQuery(data.queryModulate);
-	svs.setLimit(options.number_of_services || 250);
-	svs.orderByDesc("category");
-	svs.orderBy("busines_criticality");
-	svs.orderBy("name");
-	svs.query();
-	while (svs.next()) {
-		var cat = svs.getValue("category");
+
+	//Object to store the Business Service names and their Domains/Service towers
+	data.categories = [];
+
+	//Get the Business Services and their Domains/Service towers
+	while(svs.next()) {
+		var cat = svs.getValue('category');
 		if (cat != currentCategory) {
 			catIndex++;
 			currentCategory = cat;
 			data.categories[catIndex] = {};
 			data.categories[catIndex].name = cat;
-			data.categories[catIndex].label = svs.getDisplayValue("category");
-			if (data.categories[catIndex].label == "")
-				data.categories[catIndex].label = gs.getMessage("Business Service");
+			data.categories[catIndex].label = svs.getDisplayValue('category');
+			if (data.categories[catIndex].label == '') {
+				data.categories[catIndex].label = gs.getMessage('Business Service');
+			}
 			data.categories[catIndex].services = [];
 		}
+
 		var svc = {};
 		svc.sys_id = svs.getUniqueValue();
 		svc.name = svs.getDisplayValue();
@@ -93,13 +107,13 @@
 
 		var outs = [];
 		for (var i = 0; i <= 6; i++) {
+			var svcOutageDay = {};
 			var out = new GlideAggregate("cmdb_ci_outage");
 			out.addQuery("u_business_service.sys_id", svs.getUniqueValue());
-			out.addQuery("begin", "<=", gs.daysAgoEnd(i));
-			out.addQuery("end", ">=", gs.daysAgoStart(i)).addOrCondition("end", "=", "NULL");
+			out.addQuery('sys_created_onONLast 3 months@javascript:gs.beginningOfLast3Months()@javascript:gs.endOfLast3Months()');
+			out.addQuery('beginISEMPTY^endISEMPTY^NQbegin<=javascript:gs.daysAgoEnd(' + i + ')^end>=javascript:gs.daysAgoStart(' + i + ')^ORendISEMPTY');
 			out.addAggregate('COUNT', 'type');
 			out.query();
-			var svcOutageDay = {};
 			svcOutageDay.count = 0;
 
 			while (out.next()) {
@@ -108,13 +122,19 @@
 				svcOutageDay[type] = typeCount;
 				svcOutageDay.count += typeCount;
 			}
+
 			svcOutageDay.icon = "fa-check-circle";
 			svcOutageDay.msg = gs.getMessage("{0} - no outage", svc.safeName);
 			svcOutageDay.link = ["fine"];
+
 			if (svcOutageDay.count > 1) {
 				svcOutageDay.icon = "fa-plus-circle";
 				svcOutageDay.msg = gs.getMessage("{0} - multiple issues", svc.safeName);
-				svcOutageDay.link = ["detailsModal", "", svc.sys_id, svc.safeName];
+				svcOutageDay.link = ["detailsModal", "multiple", svc.sys_id, svc.safeName];
+			} else if (svcOutageDay[''] > 0) {
+				//svcOutageDay.icon = "fa-question-circle";
+				//svcOutageDay.msg = gs.getMessage("{0} - outage record is incomplete", svc.safeName);
+				//svcOutageDay.link = ["openOutage", null, getSpecificOutage(svc.sys_id, i), svc.safeName];
 			} else if (svcOutageDay.outage > 0) {
 				svcOutageDay.icon = "fa-exclamation-circle";
 				svcOutageDay.msg = gs.getMessage("{0} - outage", svc.safeName);
@@ -138,7 +158,7 @@
 		data.categories[catIndex].services.push(svc);
 	}
 
-
+	//Find the current records for major incidents, p1, p2 and p3
 	function getOuts(serviceID) {
 		var rtn = [];
 		var num = 0;
@@ -149,7 +169,7 @@
 		var type = "";
 		var outageId = ""
 		var gr = new GlideRecord("x_fru_inc_incident");
-		gr.addEncodedQuery("stateIN30,32,34^priorityIN1,2,3^ORmajor_incident=true^ORmajor_incident_state=accepted");
+		gr.addEncodedQuery('active=true^stateIN30,32,34^priorityIN1,2,3^ORmajor_incident=true^ORmajor_incident_state=accepted');
 		gr.addQuery("business_service.sys_id",serviceID);
 		gr.query();
 		while (gr.next()) {
@@ -183,5 +203,45 @@
 		rtn.push(outageId);
 		return rtn;
 	}
+
+	//find outage record for previous seven days
+	function getSpecificOutage(sysid, day) {
+		var gr = new GlideRecord("cmdb_ci_outage");
+		gr.addQuery("u_business_service.sys_id", sysid);
+		gr.addQuery('sys_created_onONLast 3 months@javascript:gs.beginningOfLast3Months()@javascript:gs.endOfLast3Months()');
+		gr.addQuery('beginISEMPTY^endISEMPTY^NQbegin<=javascript:gs.daysAgoEnd(' + day + ')^end>=javascript:gs.daysAgoStart(' + day + ')^ORendISEMPTY');
+		gr.query();
+
+		if(gr.next()) {
+			return gr.getUniqueValue();
+		} else {
+			return "No Results";
+		}
+	}
+
+	//Legends table data
+	data.noIssuesMsg = gs.getMessage("Available");
+	data.availDescription = gs.getMessage("No outage record found against the given Business Service");
+	data.maintenanceMsg = gs.getMessage("Planned Maintenance");
+	data.plannedDescription = gs.getMessage("The Business Service has an outage record of type 'Planned Maintenance'");
+	data.degradationMsg = gs.getMessage("Performance Degradation");
+	data.performanceDescription = gs.getMessage("The Business Service has an outage record of type 'Performance Degradation'");
+	data.multipleMsg = gs.getMessage("Multiple Issues");
+	data.multipleDescription = gs.getMessage("The Business Service has more than one outage");
+	data.partialAvailMsg = gs.getMessage("Partial Functionality Unavailable");
+	data.partialAvailDescription = gs.getMessage("The Business Service has an outage record of type 'Partial Functionality Unavailable'");
+	data.outageMsg = gs.getMessage("Unavailable");
+	data.unavailDescription = gs.getMessage("The Business Service has an outage record of type 'Outage'");
+	//Current Status
+	data.opsOk = gs.getMessage('Operational');
+	data.opsOkDesc = gs.getMessage('No Major, Priority 1, Priority 2 or Priority 3 Incident records found');
+	data.majorInc = gs.getMessage('Major Incident');
+	data.mjrIncDesc = gs.getMessage('Major Incident = True or Major Incident State = Accepted and the State is one of Open, Work in Progress, On Hold');
+	data.p1 = gs.getMessage('P1 Incident');
+	data.p1Desc = gs.getMessage('Priority = 1 - Critical and the State is one of Open, Work in Progress, On Hold and it is not a Major Incident');
+	data.p2 = gs.getMessage('P2 Incident');
+	data.p2Desc = gs.getMessage('Priority = 2 - High and the State is one of Open, Work in Progress, On Hold and it is not a Major Incident');
+	data.p3 = gs.getMessage('P3 Incident');
+	data.p3Desc = gs.getMessage('Priority = 3 - Moderate and the State is one of Open, Work in Progress, On Hold and it is not a Major Incident');
 
 })();
