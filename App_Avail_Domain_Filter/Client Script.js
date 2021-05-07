@@ -14,7 +14,6 @@ function($scope, $rootScope, spUtil, spModal) {
 		c.data.domainName = domName;
 		c.data.domainValue = domValue;
 		c.server.update();
-		console.log($scope.data.cppApps);
 	}
 
 	c.doClick = function($event, outage) {
@@ -74,5 +73,9 @@ function($scope, $rootScope, spUtil, spModal) {
 	}
 
 	$scope.$on("shown.bs.modal", function(e) {})
+
+	$rootScope.$on("widgetRefresh", function(){
+		c.server.update();
+	},10000,0);
 
 }
