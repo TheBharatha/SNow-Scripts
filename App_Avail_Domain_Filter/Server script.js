@@ -1,6 +1,6 @@
 (function() {
 
-	//Get Month and Date - Start
+	//Get Month - Start
 	data.monthTranslations = {
 		'Jan': gs.getMessage("Jan"),
 		'Feb': gs.getMessage("Feb"),
@@ -15,14 +15,7 @@
 		'Nov': gs.getMessage("Nov"),
 		'Dec': gs.getMessage("Dec")
 	};
-
-	data.dates = [];
-	for (var j = 7; j > 0; j--) {
-		var d = new GlideDate();
-		d.subtract(1000 * 3600 * 24 * (j - 1));
-		data.dates.push(d.getDisplayValueInternal());
-	}
-	//Get Month and Date - End
+	//Get Month - End
 
 	//Default query for apps from all the domains
 	var queryModulate = 'x_fru_foundation_application.u_cpp=yes^sys_class_name=cmdb_ci_service^u_imc_status=Active^x_fru_foundation_service_towerANYTHING';
@@ -48,7 +41,6 @@
 	allDomains.addEncodedQuery('name=cmdb_ci_service^element=x_fru_foundation_service_tower^language=en^inactive=false^labelNOT LIKEarchitecture^labelNOT LIKEpayments, deposits, trust^label!=business partner^label!=credit and lending^label!=Enterprise Data and Analytics^label!=Delivery Channels and Contact Management^label!=Corporate and Enterprise Risk^label!=Strategy, Contact Center Platform and CoE^label!=Core Payments Development and Delivery^label!=Deposits Platform and Processing^label!=Information Security and Technology Risk^label!=Electronic Payments and Strategy Development');
 	allDomains.query();
 
-	data.countType = {};
 	var av = {};
 	while(allDomains.next()) {
 		av.appName = allDomains.getValue('label');
@@ -107,13 +99,13 @@
 
 		var outs = [];
 		for (var i = 0; i <= 6; i++) {
-			var svcOutageDay = {};
 			var out = new GlideAggregate("cmdb_ci_outage");
 			out.addQuery("u_business_service.sys_id", svs.getUniqueValue());
-			out.addQuery('sys_created_onONLast 3 months@javascript:gs.beginningOfLast3Months()@javascript:gs.endOfLast3Months()');
-			out.addQuery('beginISEMPTY^endISEMPTY^NQbegin<=javascript:gs.daysAgoEnd(' + i + ')^end>=javascript:gs.daysAgoStart(' + i + ')^ORendISEMPTY');
+			out.addQuery("begin", "<=", gs.daysAgoEnd(i));
+			out.addQuery("end", ">=", gs.daysAgoStart(i)).addOrCondition("end", "=", "NULL");
 			out.addAggregate('COUNT', 'type');
 			out.query();
+			var svcOutageDay = {};
 			svcOutageDay.count = 0;
 
 			while (out.next()) {
@@ -130,11 +122,11 @@
 			if (svcOutageDay.count > 1) {
 				svcOutageDay.icon = "fa-plus-circle";
 				svcOutageDay.msg = gs.getMessage("{0} - multiple issues", svc.safeName);
-				svcOutageDay.link = ["detailsModal", "multiple", svc.sys_id, svc.safeName];
+				svcOutageDay.link = ["detailsModal", "", svc.sys_id, svc.safeName];
 			} else if (svcOutageDay[''] > 0) {
-				//svcOutageDay.icon = "fa-question-circle";
-				//svcOutageDay.msg = gs.getMessage("{0} - outage record is incomplete", svc.safeName);
-				//svcOutageDay.link = ["openOutage", null, getSpecificOutage(svc.sys_id, i), svc.safeName];
+				svcOutageDay.icon = "fa-question-circle";
+				svcOutageDay.msg = gs.getMessage("{0} - outage record is incomplete", svc.safeName);
+				svcOutageDay.link = ["openOutage", "", getSpecificOutage(svc.sys_id, i), svc.safeName];
 			} else if (svcOutageDay.outage > 0) {
 				svcOutageDay.icon = "fa-exclamation-circle";
 				svcOutageDay.msg = gs.getMessage("{0} - outage", svc.safeName);
@@ -157,6 +149,15 @@
 		svc.outages = outs;
 		data.categories[catIndex].services.push(svc);
 	}
+
+	//Get Date - Start
+	data.dates = [];
+	for (var j = 7; j > 0; j--) {
+		var d = new GlideDate();
+		d.subtract(1000 * 3600 * 24 * (j - 1));
+		data.dates.push(d.getDisplayValueInternal());
+	}
+	//Get Date - End
 
 	//Find the current records for major incidents, p1, p2 and p3
 	function getOuts(serviceID) {
@@ -209,7 +210,8 @@
 		var gr = new GlideRecord("cmdb_ci_outage");
 		gr.addQuery("u_business_service.sys_id", sysid);
 		gr.addQuery('sys_created_onONLast 3 months@javascript:gs.beginningOfLast3Months()@javascript:gs.endOfLast3Months()');
-		gr.addQuery('beginISEMPTY^endISEMPTY^NQbegin<=javascript:gs.daysAgoEnd(' + day + ')^end>=javascript:gs.daysAgoStart(' + day + ')^ORendISEMPTY');
+		gr.addQuery("begin", "<=", gs.daysAgoEnd(day));
+		gr.addQuery("end", ">=", gs.daysAgoStart(day)).addOrCondition("end", "=", "NULL");
 		gr.query();
 
 		if(gr.next()) {
