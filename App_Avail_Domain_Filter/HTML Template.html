@@ -1,4 +1,4 @@
-<p class="showDomain">${Now showing } <text>{{c.data.selectedDomain}}</text></p>
+<p class="showDomain">${Current selection } <text ng-class="{ 'red-class' : c.data.changeColor}" >{{c.data.selectedDomain}}</text></p>
 <div class="buttonGrid">
   <div ng-repeat="allApp in c.data.appNamesValues.appsNvalues">
     <button type= "button" name="domainButtons" ng-click="showAppStatus(allApp.appValue,allApp.appName)">
@@ -11,23 +11,21 @@
   <div class="panel panel-default">
     <table class="table table-hover">
       <thead>
-        <tr>
-          <th scope="col">
-            <h2 class="panel-title title">
-              ${Status History}
-            </h2>
-          </th>
-          <th scope="col" ng-repeat="date in ::data.dates" class="date-column">{{::date.month}} {{::date.day}}</th>
-          <th scope="col" class="date-column">${Now}</th>
-        </tr>
+        <th scope="col">
+          <h2 class="panel-title title">
+            ${Status History}
+          </h2>
+        </th>
+        <th scope="col" ng-repeat="date in ::data.dates" class="date-column">{{::date.month}} {{::date.day}}</th>
+        <th scope="col" class="date-column">${Now}</th>
       </thead>
       <tbody>
         <tr ng-repeat-start="category in c.data.categories" aria-hidden="true">
           <th scope="col" colspan="4" title="{{::category.label}}"><h3 class="title category" ng-bind-html="::category.label"></h3></th>
         </tr>
-        <tr ng-repeat-end ng-repeat="service in category.services">
+        <tr ng-repeat-end ng-repeat="service in ::category.services">
           <td scope="row">
-            <a href="javascript:void(0)" data-service="{{service.sys_id}}" ng-click="c.detailsModal($event, service.sys_id, service.name)" ng-bind-html="service.name" title="Click for more info"></a>
+            <a href="javascript:void(0)" data-service="{{service.sys_id}}" ng-click="c.detailsModal($event, service.sys_id, service.name)" ng-bind-html="::service.name" title="Click for more info"></a>
           </td>
           <td ng-repeat="n in [0,1,2,3,4,5,6] track by $index" class="outage-row">
             <span
@@ -63,79 +61,27 @@
                   class="label label-info">{{service.curOutages[1]}}
             </span>
           </td>
-        </tr>          
+        </tr>
         <td class="outage-row">
-        <span ng-if="service.curOutages[0] == 0" 
-              class="label label-success" style="background:#558234">${Operational}
-        </span>
-        <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == 'Major Incident'"
-              class="label label-danger" style="background:#ff0000">${Major Incident}
-        </span>
-        <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '1 - Critical'" 
-              class="label label-warning" style="background:#cc3300">${P1 Incident}
-        </span>
-        <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '2 - High'"
-              class="label label-primary" style="background:#ff6600">${P2 Incident}
-        </span>
-        <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '3 - Moderate'"
-              class="labelP3" style="background:#f0eb4e">${P3 Incident}
-        </span>
-        <span ng-if="service.curOutages[0] > 1"
-              class="label label-info">{{service.curOutages[1]}}
-        </span>
+          <span ng-if="service.curOutages[0] == 0" 
+                class="label label-success" style="background:#558234">${Operational}
+          </span>
+          <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == 'Major Incident'"
+                class="label label-danger" style="background:#ff0000">${Major Incident}
+          </span>
+          <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '1 - Critical'" 
+                class="label label-warning" style="background:#cc3300">${P1 Incident}
+          </span>
+          <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '2 - High'"
+                class="label label-primary" style="background:#ff6600">${P2 Incident}
+          </span>
+          <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '3 - Moderate'"
+                class="labelP3" style="background:#f0eb4e">${P3 Incident}
+          </span>
+          <span ng-if="service.curOutages[0] > 1"
+                class="label label-info">{{service.curOutages[1]}}
+          </span>
         </td>
       </tbody>
     </table>
   </div>
-</div>
-<div class="panel panel-{{::options.color}} b" role="group" aria-labelledby="status_legend">
-  <div class="panel-heading">
-    <h3 class="panel-title" id="status_legend">${Legend}</h3>
-  </div>
-  <div class="panel-body">
-    <div class="col-xs-12">
-      <div class="col-xs-2"><i class="fa fa-check-circle" tooltips tooltip-template="{{::data.noIssuesMsg}}"></i></div>
-      <div class="col-xs-10" style="text-align:left"> <b>{{::data.noIssuesMsg}}</b> | {{::data.availDescription}}</div>
-    </div>
-    <div class="col-xs-12">
-      <div class="col-xs-2"><i class="fa fa-info-circle" tooltips tooltip-template="{{::data.maintenanceMsg}}"></i></div>
-      <div class="col-xs-10" style="text-align:left"> <b>{{::data.maintenanceMsg}}</b> | {{::data.plannedDescription}}</div>
-    </div>
-    <div class="col-xs-12">
-      <div class="col-xs-2"><i class="fa fa-minus-circle" tooltips tooltip-template="{{::data.degradationMsg}}"></i></div>
-      <div class="col-xs-10" style="text-align:left"> <b>{{::data.degradationMsg}}</b> | {{::data.performanceDescription}}</div>
-    </div>
-    <div class="col-xs-12">
-      <div class="col-xs-2"><i class="fa fa-plus-circle" tooltips tooltip-template="{{::data.multipleMsg}}"></i></div>
-      <div class="col-xs-10" style="text-align:left"> <b>{{::data.multipleMsg}}</b> | {{::data.multipleDescription}}</div>
-    </div>
-    <div class="col-xs-12">
-      <div class="col-xs-2"><i class="fa fa-times-circle" style= "color: orange" tooltips tooltip-template="{{::data.partialAvailMsg}}"></i></div>
-      <div class="col-xs-10" style="text-align:left"> <b>{{::data.partialAvailMsg}}</b> | {{::data.partialAvailDescription}}</div>
-    </div>
-    <div class="col-xs-12">
-      <div class="col-xs-2"><i class="fa fa-exclamation-circle" tooltips tooltip-template="{{::data.outageMsg}}"></i></div>
-      <div class="col-xs-10" style="text-align:left"> <b>{{::data.outageMsg}}</b> | {{::data.unavailDescription}}</div>
-    </div>
-    <div class="col-xs-12">
-      <div class="col-xs-2"> <b class="label" style="background:#558234">{{::data.opsOk}}</b></div>
-      <div class="col-xs-10" style="text-align:left">{{::data.opsOkDesc}}</div>
-    </div>
-    <div class="col-xs-12">
-      <div class="col-xs-2"> <b class="label" style="background:#ff0000">{{::data.majorInc}}</b></div>
-      <div class="col-xs-10" style="text-align:left">{{::data.mjrIncDesc}}</div>
-    </div>
-    <div class="col-xs-12">
-      <div class="col-xs-2"> <b class="label" style="background:#cc3300">{{::data.p1}}</b></div>
-      <div class="col-xs-10" style="text-align:left">{{::data.p1Desc}}</div>
-    </div>
-    <div class="col-xs-12">
-      <div class="col-xs-2"> <b class="label" style="background:#ff6600">{{::data.p2}}</b></div>
-      <div class="col-xs-10" style="text-align:left">{{::data.p2Desc}}</div>
-    </div>
-    <div class="col-xs-12">
-      <div class="col-xs-2"> <b class="label" style="color:black; background:#f0eb4e">{{::data.p3}}</b></div>
-      <div class="col-xs-10" style="text-align:left">{{::data.p3Desc}}</div>
-    </div>
-  </div>
-</div>
