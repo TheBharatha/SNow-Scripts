@@ -1,3 +1,7 @@
+.red-class{
+  color: #ff0000;
+}
+
 .showDomain{
   background-color: #cfd2d1;
   color: $gray-darker;
