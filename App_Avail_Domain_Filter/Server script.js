@@ -72,6 +72,13 @@
 	svs.query();
 	var currentCategory = "-";
 	var catIndex = -1;
+	
+	if (svs.getRowCount() == 0) {
+		data.selectedDomain = "Oops! Something went wrong with this domain filter, we are working to resolve this.";
+		data.changeColor = true;
+	} else {
+		data.changeColor = false;
+	}
 
 	//Object to store the Business Service names and their Domains/Service towers
 	data.categories = [];
@@ -123,10 +130,6 @@
 				svcOutageDay.icon = "fa-plus-circle";
 				svcOutageDay.msg = gs.getMessage("{0} - multiple issues", svc.safeName);
 				svcOutageDay.link = ["detailsModal", "", svc.sys_id, svc.safeName];
-			} else if (svcOutageDay[''] > 0) {
-				svcOutageDay.icon = "fa-question-circle";
-				svcOutageDay.msg = gs.getMessage("{0} - outage record is incomplete", svc.safeName);
-				svcOutageDay.link = ["openOutage", "", getSpecificOutage(svc.sys_id, i), svc.safeName];
 			} else if (svcOutageDay.outage > 0) {
 				svcOutageDay.icon = "fa-exclamation-circle";
 				svcOutageDay.msg = gs.getMessage("{0} - outage", svc.safeName);
@@ -220,30 +223,5 @@
 			return "No Results";
 		}
 	}
-
-	//Legends table data
-	data.noIssuesMsg = gs.getMessage("Available");
-	data.availDescription = gs.getMessage("No outage record found against the given Business Service");
-	data.maintenanceMsg = gs.getMessage("Planned Maintenance");
-	data.plannedDescription = gs.getMessage("The Business Service has an outage record of type 'Planned Maintenance'");
-	data.degradationMsg = gs.getMessage("Performance Degradation");
-	data.performanceDescription = gs.getMessage("The Business Service has an outage record of type 'Performance Degradation'");
-	data.multipleMsg = gs.getMessage("Multiple Issues");
-	data.multipleDescription = gs.getMessage("The Business Service has more than one outage");
-	data.partialAvailMsg = gs.getMessage("Partial Functionality Unavailable");
-	data.partialAvailDescription = gs.getMessage("The Business Service has an outage record of type 'Partial Functionality Unavailable'");
-	data.outageMsg = gs.getMessage("Unavailable");
-	data.unavailDescription = gs.getMessage("The Business Service has an outage record of type 'Outage'");
-	//Current Status
-	data.opsOk = gs.getMessage('Operational');
-	data.opsOkDesc = gs.getMessage('No Major, Priority 1, Priority 2 or Priority 3 Incident records found');
-	data.majorInc = gs.getMessage('Major Incident');
-	data.mjrIncDesc = gs.getMessage('Major Incident = True or Major Incident State = Accepted and the State is one of Open, Work in Progress, On Hold');
-	data.p1 = gs.getMessage('P1 Incident');
-	data.p1Desc = gs.getMessage('Priority = 1 - Critical and the State is one of Open, Work in Progress, On Hold and it is not a Major Incident');
-	data.p2 = gs.getMessage('P2 Incident');
-	data.p2Desc = gs.getMessage('Priority = 2 - High and the State is one of Open, Work in Progress, On Hold and it is not a Major Incident');
-	data.p3 = gs.getMessage('P3 Incident');
-	data.p3Desc = gs.getMessage('Priority = 3 - Moderate and the State is one of Open, Work in Progress, On Hold and it is not a Major Incident');
-
+	
 })();
