@@ -56,9 +56,6 @@ function($scope, $rootScope, spUtil, spModal) {
 		} else if (type == "multiple") {
 			icon = "plus";
 			text = "circle";
-		} else if (!type) {
-			icon = "question";
-			text = "circle";
 		}
 
 		var outageId = $outage;
