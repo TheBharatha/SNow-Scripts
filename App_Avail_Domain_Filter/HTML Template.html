@@ -1,7 +1,7 @@
-<p class="showDomain">${Current selection } <text ng-class="{ 'red-class' : c.data.changeColor}" >{{c.data.selectedDomain}}</text></p>
+<p class="showDomain">${Current selection } <text ng-class="{ 'red-class' : c.data.changeColor}">{{c.data.selectedDomain}}</text></p>
 <div class="buttonGrid">
   <div ng-repeat="allApp in c.data.appNamesValues.appsNvalues">
-    <button type= "button" name="domainButtons" ng-click="showAppStatus(allApp.appValue,allApp.appName)">
+    <button ng-class="{'mi-class': c.data.highlight[allApp.appName]==4, 'p1-class': c.data.highlight[allApp.appName]==3, 'p2-class': c.data.highlight[allApp.appName]==2, 'p3-class': c.data.highlight[allApp.appName]==1}" type="button" name="domainButtons" ng-click="showAppStatus(allApp.appValue,allApp.appName)">
       {{allApp.appName}}
     </button>
   </div>
