@@ -1,5 +1,5 @@
 (function() {
-
+	
 	//Get Month - Start
 	data.monthTranslations = {
 		'Jan': gs.getMessage("Jan"),
@@ -35,6 +35,9 @@
 	data.appNamesValues = {
 		"appsNvalues" : []
 	};
+	
+	//To maintain a dictionary of Business Service and it's related group color for button
+	data.highlight = {};
 
 	//Get the domains and its values
 	var allDomains = new GlideRecord("sys_choice");
@@ -56,8 +59,10 @@
 	//Sort the Domain names alphabetically
 	data.appNamesValues.appsNvalues.sort(function(a,b){
 		if(a.appName > b.appName) {
+			data.highlight[a.appName] = 0;
 			return 1;
 		} else {
+			data.highlight[a.appName] = 0;
 			return -1;
 		}
 	});
@@ -161,11 +166,12 @@
 		data.dates.push(d.getDisplayValueInternal());
 	}
 	//Get Date - End
-
+	
 	//Find the current records for major incidents, p1, p2 and p3
-	function getOuts(serviceID) {
+	function getOuts(serviceID,sname) {
 		var rtn = [];
 		var num = 0;
+		var colorValue = 0;
 		var mi = 0;
 		var p1 = 0;
 		var p2 = 0;
@@ -178,26 +184,41 @@
 		gr.query();
 		while (gr.next()) {
 			num ++;
+			data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = colorValue;
 			if (gr.getValue('major_incident') == '1' || gr.getValue('major_incident_state') == 'accepted') {
 				mi++;
+				data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = 4;
 			} else if (gr.getValue('priority') == '1' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 				p1++;
+				colorValue=3;
+				data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 			} else if (gr.getValue('priority') == '2' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 				p2++;
+				colorValue=2;
+				data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 			} else if (gr.getValue('priority') == '3' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 				p3++;
+				colorValue=1;
+				data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 			}
 			if (num > 1) {
 				type = 'M: ' + mi + ', P1: ' + p1 + ', P2: ' + p2 + ' and P3: ' + p3;
 			} else {
 				if (gr.getValue('major_incident') == '1' || gr.getValue('major_incident_state') == 'accepted') {
 					type = 'Major Incident';
+					data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = 4;
 				} else if (gr.getValue('priority') == '1' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 					type = '1 - Critical';
+					colorValue=3;
+					data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 				} else if (gr.getValue('priority') == '2' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 					type = '2 - High';
+					colorValue=2;
+					data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 				} else if (gr.getValue('priority') == '3' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 					type = '3 - Moderate';
+					colorValue=1;
+					data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 				}
 			}
 			outageId = gr.getUniqueValue();
