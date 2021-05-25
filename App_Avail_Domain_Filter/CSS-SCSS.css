@@ -2,6 +2,25 @@
   color: #ff0000;
 }
 
+.p3-class{
+  background-color:#f0eb4e;
+}
+
+.p2-class{
+  background-color:#ff6600;
+  color:#ffffff;
+}
+
+.p1-class{
+  background-color:#cc3300;
+  color:#ffffff;
+}
+
+.mi-class{
+  background-color:#558234;
+  color:#ffffff;
+}
+
 .showDomain{
   background-color: #cfd2d1;
   color: $gray-darker;
