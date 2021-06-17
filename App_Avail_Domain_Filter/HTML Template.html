@@ -1,11 +1,16 @@
 <p class="showDomain">${Current selection } <text ng-class="{ 'red-class' : c.data.changeColor}">{{c.data.selectedDomain}}</text></p>
 <div class="buttonGrid">
   <div ng-repeat="allApp in c.data.appNamesValues.appsNvalues">
-    <button ng-class="{'mi-class': c.data.highlight[allApp.appName]==4, 'p1-class': c.data.highlight[allApp.appName]==3, 'p2-class': c.data.highlight[allApp.appName]==2, 'p3-class': c.data.highlight[allApp.appName]==1}" type="button" name="domainButtons" ng-click="showAppStatus(allApp.appValue,allApp.appName)">
+    <button ng-class="{'mi-class': c.data.domainColor[allApp.appName]==4, 'p1-class': c.data.domainColor[allApp.appName]==3, 'p2-class': c.data.domainColor[allApp.appName]==2, 'p3-class': c.data.domainColor[allApp.appName]==1}" type="button" name="domainButtons" ng-click="showAppStatus(allApp.appValue,allApp.appName)">
       {{allApp.appName}}
     </button>
   </div>
-</div>div>
+  <div ng-show="c.blankOuts()">
+    <button style="background-color:#000000; color:#ffffff; font-weight: bold;" ng-click="c.showOuts(c.data.Incs)">
+      Incomplete Outage records: {{c.data.bCount}}
+    </button>
+  </div>
+</div>
 <div>&nbsp;</div>
 <div class="header">
   <div class="panel panel-default">
@@ -46,19 +51,29 @@
                   class="label label-success" style="background:#558234">${Operational}
             </span>
             <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == 'Major Incident'"
-                  class="label label-danger" style="background:#ff0000">${Major Incident}
+                  href="javascript:void(0)"
+                  ng-click="c.openInc(service.curOutages[2])"
+                  class="label label-danger" style="background:#ff0000; cursor:pointer;">${Major Incident}
             </span>
-            <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '1 - Critical'" 
-                  class="label label-warning" style="background:#cc3300">${P1 Incident}
+            <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '1 - Critical'"
+                  href="javascript:void(0)"
+                  ng-click="c.openInc(service.curOutages[2])"
+                  class="label label-warning" style="background:#cc3300; cursor:pointer;">${P1 Incident}
             </span>
             <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '2 - High'"
-                  class="label label-primary" style="background:#ff6600">${P2 Incident}
+                  href="javascript:void(0)"
+                  ng-click="c.openInc(service.curOutages[2])"
+                  class="label label-primary" style="background:#ff6600; cursor:pointer;">${P2 Incident}
             </span>
             <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '3 - Moderate'"
-                  class="labelP3" style="background:#f0eb4e">${P3 Incident}
+                  href="javascript:void(0)"
+                  ng-click="c.openInc(service.curOutages[2])"
+                  class="labelP3" style="background:#f0eb4e; cursor:pointer;">${P3/U Incident}
             </span>
             <span ng-if="service.curOutages[0] > 1"
-                  class="label label-info">{{service.curOutages[1]}}
+                  href="javascript:void(0)"
+                  ng-click="c.multInc(service.curOutages[3])"
+                  class="label label-info" style="cursor:pointer">{{service.curOutages[1]}}
             </span>
           </td>
         </tr>
@@ -76,7 +91,7 @@
                 class="label label-primary" style="background:#ff6600">${P2 Incident}
           </span>
           <span ng-if="service.curOutages[0] == 1 && service.curOutages[1] == '3 - Moderate'"
-                class="labelP3" style="background:#f0eb4e">${P3 Incident}
+                class="labelP3" style="background:#f0eb4e">${P3/U Incident}
           </span>
           <span ng-if="service.curOutages[0] > 1"
                 class="label label-info">{{service.curOutages[1]}}
