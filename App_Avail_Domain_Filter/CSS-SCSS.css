@@ -4,21 +4,25 @@
 
 .p3-class{
   background-color:#f0eb4e;
+  font-weight: bold;
 }
 
 .p2-class{
   background-color:#ff6600;
   color:#ffffff;
+  font-weight: bold;
 }
 
 .p1-class{
   background-color:#cc3300;
   color:#ffffff;
+  font-weight: bold;
 }
 
 .mi-class{
-  background-color:#558234;
+  background-color:#ff0000;
   color:#ffffff;
+  font-weight: bold;
 }
 
 .showDomain{
@@ -41,6 +45,7 @@ button{
   height:50px;
   border-radius:3px;
   color:black;
+  font-weight: bold;
   box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
 }
 
@@ -131,7 +136,7 @@ thead{
 }
 
 .banner-success {
-	background-color: #5cb85c;
+  background-color: #5cb85c;
 }
 
 .label {
@@ -152,7 +157,7 @@ thead{
 }
 
 .panel-body {
-	margin: 0px -20px 0px -20px;
+  margin: 0px -20px 0px -20px;
   text-align: center;
 }
 
