@@ -1,5 +1,5 @@
 (function() {
-	
+
 	//Get Month - Start
 	data.monthTranslations = {
 		'Jan': gs.getMessage("Jan"),
@@ -35,19 +35,47 @@
 	data.appNamesValues = {
 		"appsNvalues" : []
 	};
-	
-	//To maintain a dictionary of Business Service and it's related group color for button
-	data.highlight = {};
+
+	//To check the priority of the incident and assign a color value to the domain filter buttons accordingly - Start
+	var gd = new GlideRecord('sys_choice');
+	gd.addEncodedQuery('name=cmdb_ci_service^element=x_fru_foundation_service_tower^language=en^inactive=false^labelNOT LIKEarchitecture^labelNOT LIKEpayments, deposits, trust^label!=business partner^label!=credit and lending^label!=Enterprise Data and Analytics^label!=Delivery Channels and Contact Management^label!=Corporate and Enterprise Risk^label!=Strategy, Contact Center Platform and CoE^label!=Core Payments Development and Delivery^label!=Deposits Platform and Processing^label!=Information Security and Technology Risk^label!=Electronic Payments and Strategy Development^label!=Technology Operations');
+	gd.query();
+	data.domainColor = {};
+	while(gd.next()) {
+		data.domainColor[gd.getDisplayValue()] = 0;
+		var bs = new GlideRecord('cmdb_ci_service');
+		bs.addQuery('x_fru_foundation_application.u_cpp=yes^sys_class_name=cmdb_ci_service^u_imc_status=Active^x_fru_foundation_service_tower='+gd.getValue('value'));
+		bs.query();
+		while(bs.next()) {
+			var incs = new GlideRecord('x_fru_inc_incident');
+			incs.addEncodedQuery('active=true^priorityIN1,2^urgencyIN1,2,3^ORmajor_incident=true^ORmajor_incident_state=accepted^stateIN30,32,34^NQpriority=3^urgency=1^stateIN30,32,34');
+			incs.addQuery('business_service.sys_id',bs.getUniqueValue());
+			incs.query();
+			while(incs.next()) {
+				if(incs.getValue('major_incident') == '1' || incs.getValue('major_incident_state') == 'accepted') {
+					data.domainColor[gd.getDisplayValue()] = 4;
+				} else if(incs.getValue('priority') == '1' && incs.getValue('major_incident') == '0' || incs.getValue('major_incident_state') == 'null') {
+					data.domainColor[gd.getDisplayValue()] = (data.domainColor[gd.getDisplayValue()] <= 3) ? 3 : data.domainColor[gd.getDisplayValue()];
+				} else if(incs.getValue('priority') == '2' && incs.getValue('major_incident') == '0' || incs.getValue('major_incident_state') == 'null') {
+					data.domainColor[gd.getDisplayValue()] = (data.domainColor[gd.getDisplayValue()] <= 2) ? 2 : data.domainColor[gd.getDisplayValue()];
+				} else if(incs.getValue('priority') == '3' && incs.getValue('major_incident') == '0' || incs.getValue('major_incident_state') == 'null') {
+					data.domainColor[gd.getDisplayValue()] = (data.domainColor[gd.getDisplayValue()] <= 1) ? 1 : data.domainColor[gd.getDisplayValue()];
+				}
+			}
+		}
+	}
+	// - End
 
 	//Get the domains and its values
 	var allDomains = new GlideRecord("sys_choice");
-	allDomains.addEncodedQuery('name=cmdb_ci_service^element=x_fru_foundation_service_tower^language=en^inactive=false^labelNOT LIKEarchitecture^labelNOT LIKEpayments, deposits, trust^label!=business partner^label!=credit and lending^label!=Enterprise Data and Analytics^label!=Delivery Channels and Contact Management^label!=Corporate and Enterprise Risk^label!=Strategy, Contact Center Platform and CoE^label!=Core Payments Development and Delivery^label!=Deposits Platform and Processing^label!=Information Security and Technology Risk^label!=Electronic Payments and Strategy Development');
+	allDomains.addEncodedQuery('name=cmdb_ci_service^element=x_fru_foundation_service_tower^language=en^inactive=false^labelNOT LIKEarchitecture^labelNOT LIKEpayments, deposits, trust^label!=business partner^label!=credit and lending^label!=Enterprise Data and Analytics^label!=Delivery Channels and Contact Management^label!=Corporate and Enterprise Risk^label!=Strategy, Contact Center Platform and CoE^label!=Core Payments Development and Delivery^label!=Deposits Platform and Processing^label!=Information Security and Technology Risk^label!=Electronic Payments and Strategy Development^label!=Technology Operations');
 	allDomains.query();
 
 	var av = {};
 	while(allDomains.next()) {
 		av.appName = allDomains.getValue('label');
 		av.appValue = allDomains.getValue('value');
+		data.onlyAppValue.push(allDomains.getDisplayValue());
 		data.appNamesValues.appsNvalues.push(av);
 		av = {};
 	}
@@ -59,10 +87,8 @@
 	//Sort the Domain names alphabetically
 	data.appNamesValues.appsNvalues.sort(function(a,b){
 		if(a.appName > b.appName) {
-			data.highlight[a.appName] = 0;
 			return 1;
 		} else {
-			data.highlight[a.appName] = 0;
 			return -1;
 		}
 	});
@@ -77,7 +103,7 @@
 	svs.query();
 	var currentCategory = "-";
 	var catIndex = -1;
-	
+
 	if (svs.getRowCount() == 0) {
 		data.selectedDomain = "Oops! Something went wrong with this domain filter, we are working to resolve this.";
 		data.changeColor = true;
@@ -166,12 +192,12 @@
 		data.dates.push(d.getDisplayValueInternal());
 	}
 	//Get Date - End
-	
+
 	//Find the current records for major incidents, p1, p2 and p3
 	function getOuts(serviceID,sname) {
 		var rtn = [];
+		var groupIncs = [];
 		var num = 0;
-		var colorValue = 0;
 		var mi = 0;
 		var p1 = 0;
 		var p2 = 0;
@@ -179,46 +205,33 @@
 		var type = "";
 		var outageId = ""
 		var gr = new GlideRecord("x_fru_inc_incident");
-		gr.addEncodedQuery('active=true^stateIN30,32,34^priorityIN1,2,3^ORmajor_incident=true^ORmajor_incident_state=accepted');
+		gr.addEncodedQuery('active=true^priorityIN1,2^urgencyIN1,2,3^ORmajor_incident=true^ORmajor_incident_state=accepted^stateIN30,32,34^NQpriority=3^urgency=1^stateIN30,32,34');
 		gr.addQuery("business_service.sys_id",serviceID);
 		gr.query();
 		while (gr.next()) {
 			num ++;
-			data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = colorValue;
 			if (gr.getValue('major_incident') == '1' || gr.getValue('major_incident_state') == 'accepted') {
 				mi++;
-				data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = 4;
 			} else if (gr.getValue('priority') == '1' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 				p1++;
-				colorValue=3;
-				data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 			} else if (gr.getValue('priority') == '2' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 				p2++;
-				colorValue=2;
-				data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 			} else if (gr.getValue('priority') == '3' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 				p3++;
-				colorValue=1;
-				data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 			}
+			groupIncs.push(gr.getDisplayValue('number')); //Get the Incidents
+
 			if (num > 1) {
 				type = 'M: ' + mi + ', P1: ' + p1 + ', P2: ' + p2 + ' and P3: ' + p3;
 			} else {
 				if (gr.getValue('major_incident') == '1' || gr.getValue('major_incident_state') == 'accepted') {
 					type = 'Major Incident';
-					data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = 4;
 				} else if (gr.getValue('priority') == '1' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 					type = '1 - Critical';
-					colorValue=3;
-					data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 				} else if (gr.getValue('priority') == '2' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 					type = '2 - High';
-					colorValue=2;
-					data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 				} else if (gr.getValue('priority') == '3' && gr.getValue('major_incident') == '0' || gr.getValue('major_incident_state') == 'null') {
 					type = '3 - Moderate';
-					colorValue=1;
-					data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] = (data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')] < colorValue) ? colorValue : data.highlight[gr.getDisplayValue('business_service.x_fru_foundation_service_tower')];
 				}
 			}
 			outageId = gr.getUniqueValue();
@@ -226,8 +239,20 @@
 		rtn.push(num);
 		rtn.push(type);
 		rtn.push(outageId);
+		rtn.push(groupIncs);
 		return rtn;
 	}
+
+	//Look for incomplete outage records - Start
+	var blankInc = new GlideRecord('cmdb_ci_outage');
+	blankInc.addQuery('sys_created_on>=javascript:gs.beginningOfLast90Days()^beginISEMPTY^endISEMPTY');
+	blankInc.query();
+	data.bCount = blankInc.getRowCount();
+	data.Incs = [];
+	while(blankInc.next()) {
+		data.Incs.push(blankInc.getUniqueValue());
+	}
+	//Look for incomplete outage records - End
 
 	//find outage record for previous seven days
 	function getSpecificOutage(sysid, day) {
@@ -244,5 +269,5 @@
 			return "No Results";
 		}
 	}
-	
+
 })();
